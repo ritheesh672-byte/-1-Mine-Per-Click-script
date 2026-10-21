@@ -1,0 +1,259 @@
+-- +1 Mine Per Click Script | Made by Chilz
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local localPlayer = Players.LocalPlayer
+
+local response = request({
+    Url = "https://sirius.menu/rayfield",
+    Method = "GET"
+})
+
+local Rayfield = loadstring(response.Body)()
+
+local Window = Rayfield:CreateWindow({
+    Name = "+1 Mine Per Click Script | Made by Chilz",
+    LoadingTitle = "+1 Mine Per Click Script",
+    LoadingSubtitle = "Made by Chilz",
+    ConfigurationSaving = {Enabled = false}
+})
+
+local Tab = Window:CreateTab("Auto Farm", 4483362458)
+local PlayerTab = Window:CreateTab("Local Player", 4483362458)
+local UpgradesTab = Window:CreateTab("Upgrades", 4483362458)
+
+local autoClick = false
+local clicksPerSecond = 5
+local autoRebirth = false
+local autoSell = false
+local autoGoToSurface = false
+local autoBuyWalkSpeed = false
+
+local speedBoost = false
+local jumpBoost = false
+local customSpeed = 50
+local customJump = 100
+
+local Remotes = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Server")
+local SellAllLoot = Remotes:WaitForChild("SellAllLoot")
+local RebirthEvent = Remotes:WaitForChild("Rebirth")
+local GotoSurface = Remotes:WaitForChild("GotoSurface")
+local UpgradeWalkspeed = Remotes:WaitForChild("UpgradeWalkspeed")
+
+-- Auto Click Settings
+Tab:CreateSection("Auto Click Settings")
+
+Tab:CreateSlider({
+    Name = "Click Speed",
+    Range = {1, 20},
+    Increment = 1,
+    Suffix = " clicks/sec",
+    CurrentValue = 5,
+    Callback = function(value)
+        clicksPerSecond = value
+    end
+})
+
+Tab:CreateToggle({
+    Name = "Auto Click",
+    CurrentValue = false,
+    Callback = function(value)
+        autoClick = value
+        if value then
+            task.spawn(function()
+                while autoClick do
+                    local character = localPlayer.Character
+                    local tool = character and character:FindFirstChildOfClass("Tool")
+
+                    if tool then
+                        pcall(function()
+                            tool:Activate()
+                        end)
+                    end
+
+                    task.wait(1 / clicksPerSecond)
+                end
+            end)
+        end
+    end
+})
+
+-- Auto Rebirth Settings
+Tab:CreateSection("Auto Rebirth Settings")
+
+Tab:CreateButton({
+    Name = "Rebirth",
+    Callback = function()
+        pcall(function()
+            RebirthEvent:FireServer("Rebirth")
+        end)
+    end
+})
+
+Tab:CreateToggle({
+    Name = "Auto Rebirth",
+    CurrentValue = false,
+    Callback = function(value)
+        autoRebirth = value
+        if value then
+            task.spawn(function()
+                while autoRebirth do
+                    pcall(function()
+                        RebirthEvent:FireServer("Rebirth")
+                    end)
+                    task.wait(2)
+                end
+            end)
+        end
+    end
+})
+
+-- Auto Sell Settings
+Tab:CreateSection("Auto Sell Settings")
+
+Tab:CreateButton({
+    Name = "Sell All Loot",
+    Callback = function()
+        pcall(function()
+            SellAllLoot:FireServer()
+        end)
+    end
+})
+
+Tab:CreateToggle({
+    Name = "Auto Sell All Loot",
+    CurrentValue = false,
+    Callback = function(value)
+        autoSell = value
+        if value then
+            task.spawn(function()
+                while autoSell do
+                    pcall(function()
+                        SellAllLoot:FireServer()
+                    end)
+                    task.wait(5)
+                end
+            end)
+        end
+    end
+})
+
+-- Go To Surface Settings
+Tab:CreateSection("Go To Surface Settings")
+
+Tab:CreateButton({
+    Name = "Go To Surface",
+    Callback = function()
+        pcall(function()
+            GotoSurface:FireServer()
+        end)
+    end
+})
+
+Tab:CreateToggle({
+    Name = "Auto Go To Surface",
+    CurrentValue = false,
+    Callback = function(value)
+        autoGoToSurface = value
+        if value then
+            task.spawn(function()
+                while autoGoToSurface do
+                    pcall(function()
+                        GotoSurface:FireServer()
+                    end)
+                    task.wait(5)
+                end
+            end)
+        end
+    end
+})
+
+-- Upgrades Tab
+UpgradesTab:CreateSection("Auto Buy WalkSpeed")
+
+UpgradesTab:CreateToggle({
+    Name = "Auto Buy WalkSpeed",
+    CurrentValue = false,
+    Callback = function(value)
+        autoBuyWalkSpeed = value
+
+        if value then
+            task.spawn(function()
+                while autoBuyWalkSpeed do
+                    pcall(function()
+                        UpgradeWalkspeed:FireServer("Cash")
+                    end)
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+-- Update movement settings
+local function updateMovement()
+    local character = localPlayer.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+    if not humanoid then
+        return
+    end
+
+    humanoid.WalkSpeed = speedBoost and customSpeed or 16
+    humanoid.UseJumpPower = true
+    humanoid.JumpPower = jumpBoost and customJump or 50
+end
+
+-- Custom Speed Settings
+PlayerTab:CreateSection("Custom Speed")
+
+PlayerTab:CreateSlider({
+    Name = "Speed Amount",
+    Range = {16, 200},
+    Increment = 1,
+    Suffix = " speed",
+    CurrentValue = 50,
+    Callback = function(value)
+        customSpeed = value
+        updateMovement()
+    end
+})
+
+PlayerTab:CreateToggle({
+    Name = "Speed Boost",
+    CurrentValue = false,
+    Callback = function(value)
+        speedBoost = value
+        updateMovement()
+    end
+})
+
+-- Custom Jump Boost Settings
+PlayerTab:CreateSection("Custom Jump Boost")
+
+PlayerTab:CreateSlider({
+    Name = "Jump Amount",
+    Range = {50, 200},
+    Increment = 5,
+    Suffix = " power",
+    CurrentValue = 100,
+    Callback = function(value)
+        customJump = value
+        updateMovement()
+    end
+})
+
+PlayerTab:CreateToggle({
+    Name = "Jump Boost",
+    CurrentValue = false,
+    Callback = function(value)
+        jumpBoost = value
+        updateMovement()
+    end
+})
+
+-- Restore movement settings after respawning
+localPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    updateMovement()
+end)
